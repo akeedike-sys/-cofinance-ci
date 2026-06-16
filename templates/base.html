@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}COFINANCE CI{% endblock %}</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        // Prevent layout shift / flash of light theme
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark-theme');
+            }
+        })();
+    </script>
+
+    <style>
+        :root {
+            --primary-emerald: #10B981;
+            --primary-dark: #064e3b;
+            --primary-light: #ecfdf5;
+            --accent-mint: #34d399;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: rgba(226, 232, 240, 0.8);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --header-gradient: linear-gradient(135deg, #059669, #064e3b);
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --bg-input: #ffffff;
+            --border-input: #e2e8f0;
+            --text-input: #1e293b;
+            --font-family: 'Outfit', sans-serif;
+            --transition-speed: 0.3s;
+            --close-btn-filter: none;
+            --hero-gradient: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 78, 59, 0.03));
+            --hero-border: rgba(16, 185, 129, 0.15);
+        }
+
+        .dark-theme,
+        body.dark-theme {
+            --primary-emerald: #34d399;
+            --primary-dark: #047857;
+            --primary-light: #064e3b;
+            --accent-mint: #6ee7b7;
+            --bg-body: #080f0c;
+            --bg-card: #111d17;
+            --border-color: rgba(255, 255, 255, 0.07);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(17, 29, 23, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.04);
+            --header-gradient: linear-gradient(135deg, #047857, #022c1e);
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+            --bg-input: #0b1410;
+            --border-input: rgba(255, 255, 255, 0.15);
+            --text-input: #f1f5f9;
+            --close-btn-filter: invert(1) grayscale(1) brightness(2);
+            --hero-gradient: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(4, 120, 87, 0.04));
+            --hero-border: rgba(52, 211, 153, 0.2);
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-body);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-emerald);
+        }
+
+        /* Glassmorphism Navigation */
+        .navbar-custom {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            transition: background-color var(--transition-speed), border-color var(--transition-speed);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-emerald), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-link-custom {
+            font-weight: 500;
+            color: var(--text-main) !important;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link-custom:hover,
+        .nav-link-custom.active {
+            background-color: var(--primary-light);
+            color: var(--primary-emerald) !important;
+        }
+
+        /* Premium Buttons */
+        .btn-premium {
+            background: linear-gradient(135deg, var(--primary-emerald), var(--primary-dark));
+            color: white !important;
+            border: none;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-outline-premium {
+            border: 2px solid var(--primary-emerald);
+            color: var(--primary-emerald) !important;
+            background: transparent;
+            font-weight: 600;
+            padding: 0.5rem 1.4rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-premium:hover {
+            background-color: var(--primary-emerald);
+            color: white !important;
+            transform: translateY(-2px);
+        }
+
+        /* Card Premium styling */
+        .card-premium {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-premium:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        /* Badge Customization */
+        .badge-custom {
+            font-weight: 600;
+            padding: 0.4em 0.8em;
+            border-radius: 6px;
+        }
+
+        /* Form Custom Overrides */
+        .form-control,
+        .form-select {
+            background-color: var(--bg-input) !important;
+            border: 1px solid var(--border-input) !important;
+            color: var(--text-input) !important;
+            border-radius: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-emerald) !important;
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.2) !important;
+            outline: 0;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .form-label {
+            color: var(--text-main);
+        }
+
+        /* Table custom overrides */
+        .table {
+            color: var(--text-main) !important;
+        }
+
+        .table-light {
+            background-color: var(--primary-light) !important;
+            color: var(--primary-dark) !important;
+        }
+
+        .table> :not(caption)>*>* {
+            background-color: transparent !important;
+            border-bottom-color: var(--border-color) !important;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(16, 185, 129, 0.05) !important;
+        }
+
+        /* Modals overrides */
+        .modal-content {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main);
+        }
+
+        .modal-header,
+        .modal-footer {
+            border-color: var(--border-color) !important;
+        }
+
+        .btn-close {
+            filter: var(--close-btn-filter);
+        }
+
+        /* Text colors */
+        .text-dark {
+            color: var(--text-main) !important;
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        /* Dropdowns */
+        .dropdown-menu {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: var(--card-shadow);
+        }
+
+        .dropdown-item {
+            color: var(--text-main) !important;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--primary-light) !important;
+            color: var(--primary-emerald) !important;
+        }
+
+        .dropdown-divider {
+            border-top: 1px solid var(--border-color) !important;
+        }
+
+        /* Alerts */
+        .alert-success {
+            background-color: var(--primary-light) !important;
+            border-color: rgba(16, 185, 129, 0.2) !important;
+            color: var(--primary-emerald) !important;
+        }
+
+        /* Footer styling */
+        footer {
+            background-color: #060e0a;
+            color: #94a3b8;
+            padding: 3rem 0;
+            margin-top: auto;
+            border-top: 4px solid var(--primary-emerald);
+        }
+
+        footer a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--accent-mint);
+        }
+
+        /* Notification bell animation */
+        .bell-icon {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .bell-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .bell-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            font-size: 0.65rem;
+            padding: 0.25em 0.45em;
+            box-shadow: 0 0 0 2px var(--bg-card);
+        }
+
+        /* Quick Notification Drawer */
+        .notif-menu {
+            min-width: 320px;
+            max-height: 450px;
+            overflow-y: auto;
+            border-radius: 12px;
+        }
+
+        .notif-item {
+            transition: background-color 0.2s;
+        }
+
+        .notif-item:hover {
+            background-color: rgba(16, 185, 129, 0.05) !important;
+        }
+
+        .notif-item-unread {
+            background-color: var(--primary-light) !important;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- Header / Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fa-solid fa-building-columns me-2" style="color: var(--primary-emerald)"></i>COFINANCE CI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
+                style="filter: var(--close-btn-filter)">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+                            href="{% url 'home' %}">Accueil</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                            href="{% url 'dashboard' %}">Tableau de bord</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom {% if request.resolver_match.url_name == 'chat_demo' %}active{% endif %}"
+                            href="{% url 'chat_demo' %}">Démo Chat Temps Réel</a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Theme Toggle Button -->
+                    <button class="btn btn-link nav-link text-secondary p-2 me-1" id="theme-toggle"
+                        aria-label="Toggle theme">
+                        <i class="fa-solid fa-moon fs-5 text-secondary" id="theme-toggle-icon"></i>
+                    </button>
+
+                    {% if user.is_authenticated %}
+                    <!-- Notifications Dropdown -->
+                    <div class="dropdown me-2">
+                        <div class="bell-icon" data-bs-toggle="dropdown" aria-expanded="false" id="notifDropdown">
+                            <i class="fa-regular fa-bell fs-4 text-secondary"></i>
+                            {% if unread_notifications_count > 0 %}
+                            <span class="badge rounded-pill bg-danger bell-badge" id="unread-count">{{
+                                unread_notifications_count }}</span>
+                            {% endif %}
+                        </div>
+                        <ul class="dropdown-menu dropdown-menu-end notif-menu p-2" aria-labelledby="notifDropdown"
+                            id="notif-list">
+                            <li class="dropdown-header border-bottom pb-2 text-dark fw-bold">Notifications Récentes</li>
+                            {% if notifications %}
+                            {% for notif in notifications %}
+                            <li class="p-2 border-bottom notif-item {% if not notif.is_read %}notif-item-unread{% endif %}"
+                                id="notif-item-{{ notif.id }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <small class="fw-bold text-success">
+                                        {% if notif.event_type == 'credit_status' %}Crédit
+                                        {% elif notif.event_type == 'repayment_recorded' %}Paiement
+                                        {% elif notif.event_type == 'insurance_confirmed' %}Assurance
+                                        {% else %}Alerte{% endif %}
+                                    </small>
+                                    <small class="text-muted" style="font-size: 0.75rem;">{{ notif.created_at|date:"d/m
+                                        H:i" }}</small>
+                                </div>
+                                <p class="mb-1 text-dark" style="font-size: 0.85rem;">{{ notif.message }}</p>
+                                {% if not notif.is_read %}
+                                <button class="btn btn-sm btn-link text-decoration-none p-0 text-success"
+                                    onclick="markAsRead({{ notif.id }})">Marquer comme lu</button>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                            {% else %}
+                            <li class="text-center py-3 text-muted">Aucune notification</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-premium dropdown-toggle py-1 px-3" type="button" id="userMenu"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-regular fa-user me-2"></i>{{ user.username }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item disabled" href="#"><i
+                                        class="fa-solid fa-user-tag me-2"></i>Rôle: {{ user.get_role_display }}</a></li>
+                            <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i
+                                        class="fa-solid fa-gauge me-2"></i>Dashboard</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i
+                                        class="fa-solid fa-right-from-bracket me-2"></i>Déconnexion</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-premium">Se connecter</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-5">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 mb-4 mb-md-0">
+                    <h5 class="text-white fw-bold mb-3"><i
+                            class="fa-solid fa-building-columns me-2 text-success"></i>COFINANCE CI</h5>
+                    <p class="text-muted" style="font-size: 0.9rem; color: #94a3b8 !important;">
+                        Société de Microfinance et d’Assurance Mobile agréée par la BCEAO.
+                        Favoriser l'inclusion financière des commerçants, des femmes et des entrepreneurs à Abidjan et à
+                        l'intérieur de la Côte d'Ivoire.
+                    </p>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <h6 class="text-white fw-bold mb-3">Régions d'Activité</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Abidjan</a></li>
+                        <li><a href="#">Bouaké</a></li>
+                        <li><a href="#">Korhogo</a></li>
+                        <li><a href="#">Yamoussoukro</a></li>
+                        <li><a href="#">San-Pedro</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white fw-bold mb-3">Support & Contact</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2"><a href="#"><i class="fa-solid fa-phone me-2 text-success"></i>+225 27 20 00
+                                00</a></li>
+                        <li class="mb-2"><a href="#"><i
+                                    class="fa-solid fa-envelope me-2 text-success"></i>support@cofinance.ci</a></li>
+                        <li class="mb-2"><span><i
+                                    class="fa-solid fa-location-dot me-2 text-success"></i>Abidjan-Plateau, Côte
+                                d'Ivoire</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-top border-secondary pt-3 mt-4 text-center">
+                <p class="text-muted mb-0" style="font-size: 0.85rem; color: #64748b !important;">&copy; 2026 COFINANCE
+                    CI. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Theme switcher logic
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.documentElement.classList.add('dark-theme');
+                if (themeToggleIcon) {
+                    themeToggleIcon.classList.replace('fa-moon', 'fa-sun');
+                    themeToggleIcon.classList.add('text-warning');
+                }
+            } else {
+                document.body.classList.remove('dark-theme');
+                document.documentElement.classList.remove('dark-theme');
+                if (themeToggleIcon) {
+                    themeToggleIcon.classList.replace('fa-sun', 'fa-moon');
+                    themeToggleIcon.classList.remove('text-warning');
+                }
+            }
+        }
+
+        // Initialize UI with current theme on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(currentTheme);
+        });
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                let theme = 'light';
+                if (!document.body.classList.contains('dark-theme')) {
+                    theme = 'dark';
+                }
+                applyTheme(theme);
+                localStorage.setItem('theme', theme);
+                // Dispatch event to redraw dynamic canvas items
+                window.dispatchEvent(new Event('themeChanged'));
+            });
+        }
+
+        function markAsRead(notificationId) {
+            fetch(`/api/notifications/${notificationId}/read/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        const item = document.getElementById(`notif-item-${notificationId}`);
+                        if (item) {
+                            item.classList.remove('notif-item-unread');
+                            const btn = item.querySelector('button');
+                            if (btn) btn.remove();
+                        }
+
+                        const badge = document.getElementById('unread-count');
+                        if (badge) {
+                            let count = parseInt(badge.innerText) - 1;
+                            if (count <= 0) {
+                                badge.remove();
+                            } else {
+                                badge.innerText = count;
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error("Erreur lors du marquage comme lu:", err));
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

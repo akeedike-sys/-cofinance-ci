@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+
+{% block title %}COFINANCE CI - Inclusion financière en Côte d'Ivoire{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Float animation for hero mockup */
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(0.5deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+    
+    .hero-container {
+        background: var(--hero-gradient);
+        border: 1px solid var(--hero-border);
+        border-radius: 24px;
+        padding: 3rem;
+        transition: all 0.3s ease;
+    }
+
+    .floating-mockup {
+        animation: float 6s ease-in-out infinite;
+        position: relative;
+        max-width: 360px;
+        margin: 0 auto;
+    }
+
+    .mockup-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        padding: 1.5rem;
+    }
+
+    /* Calculator Custom Styles */
+    .calculator-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .calc-slider-container {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .calc-slider-container:last-child {
+        border-bottom: none;
+    }
+
+    .calc-output-box {
+        background: linear-gradient(135deg, var(--primary-emerald), var(--primary-dark));
+        color: white;
+        padding: 2.5rem 2rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    /* Custom range input styling */
+    input[type=range] {
+        -webkit-appearance: none;
+        width: 100%;
+        background: transparent;
+    }
+
+    input[type=range]:focus {
+        outline: none;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 8px;
+        cursor: pointer;
+        background: var(--border-color);
+        border-radius: 4px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        background: var(--primary-emerald);
+        cursor: pointer;
+        -webkit-appearance: none;
+        margin-top: -6px;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        transition: transform 0.1s ease;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+    }
+
+    /* Card glow highlights */
+    .service-card {
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 2rem;
+        height: 100%;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .service-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--card-hover-shadow);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background-color: var(--primary-light);
+        color: var(--primary-emerald);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .service-card:hover .icon-wrapper {
+        transform: scale(1.1) rotate(5deg);
+        background-color: var(--primary-emerald);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-container mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-7 mb-5 mb-lg-0">
+            <h1 class="display-4 fw-extrabold mb-3 text-dark" style="letter-spacing: -1.5px; font-weight: 800; line-height: 1.15;">
+                L'inclusion financière numérique <span style="background: linear-gradient(135deg, var(--primary-emerald), var(--accent-mint)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">à portée de main</span>
+            </h1>
+            <p class="lead text-muted mb-4 fs-5">
+                COFINANCE CI modernise la microfinance et l'assurance en Côte d'Ivoire. Déposez vos demandes de crédit en ligne, assurez votre activité et échangez en temps réel avec nos conseillers terrain sans vous déplacer.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-premium btn-lg">Accéder au Dashboard</a>
+                    <a href="{% url 'chat_demo' %}" class="btn btn-outline-premium btn-lg">Démo Chat Client/Agent</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-premium btn-lg">Commencer maintenant</a>
+                    <a href="#calculator" class="btn btn-outline-premium btn-lg">Calculateur de crédit</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block text-center">
+            <div class="floating-mockup">
+                <div class="mockup-card text-start">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-success rounded-circle p-1.5" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: var(--primary-emerald) !important;">
+                                <i class="fa-solid fa-user text-white" style="font-size: 0.8rem;"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0" style="font-size: 0.85rem;">Koffi Konan</h6>
+                                <small class="text-muted" style="font-size: 0.7rem;">Client • Abidjan</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill" style="font-size: 0.7rem;">Score: 92/100</span>
+                    </div>
+                    <div class="mb-3 pt-2 border-top border-light">
+                        <small class="text-muted d-block" style="font-size: 0.75rem;">SOLDE CRÉDIT ACTIF</small>
+                        <h4 class="fw-bold text-dark mb-1">350 000 FCFA</h4>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 70%; background-color: var(--primary-emerald) !important;" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.7rem;">
+                            <span>Payé: 245K</span>
+                            <span>Restant: 105K</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <div class="bg-light p-2 rounded flex-fill text-center" style="background-color: var(--primary-light) !important;">
+                            <small class="text-muted d-block" style="font-size: 0.65rem;">Assurance</small>
+                            <span class="fw-bold text-success" style="font-size: 0.8rem;"><i class="fa-solid fa-shield-halved me-1"></i>Active</span>
+                        </div>
+                        <div class="bg-light p-2 rounded flex-fill text-center" style="background-color: var(--primary-light) !important;">
+                            <small class="text-muted d-block" style="font-size: 0.65rem;">Prochaine échéance</small>
+                            <span class="fw-bold text-dark" style="font-size: 0.8rem;">18 Juin 2026</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calculator Section -->
+<div id="calculator" class="py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold mb-2">Simulez votre Microcrédit</h2>
+        <p class="text-muted col-md-8 mx-auto">Calculez instantanément vos échéances de remboursement et estimez votre éligibilité selon votre niveau de revenu.</p>
+    </div>
+    
+    <div class="calculator-card row g-0">
+        <!-- Sliders -->
+        <div class="col-lg-7 p-4 p-md-5">
+            <div class="calc-slider-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label for="amountRange" class="fw-bold text-dark mb-0">Montant souhaité</label>
+                    <span class="badge bg-success bg-opacity-10 text-success fs-6 fw-bold px-3 py-1.5" id="amountDisplay">150 000 FCFA</span>
+                </div>
+                <input type="range" class="form-range" id="amountRange" min="20000" max="1000000" step="10000" value="150000">
+                <div class="d-flex justify-content-between text-muted mt-2" style="font-size: 0.8rem;">
+                    <span>20 000 FCFA</span>
+                    <span>1 000 000 FCFA</span>
+                </div>
+            </div>
+
+            <div class="calc-slider-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label for="durationRange" class="fw-bold text-dark mb-0">Durée du crédit</label>
+                    <span class="badge bg-success bg-opacity-10 text-success fs-6 fw-bold px-3 py-1.5" id="durationDisplay">3 mois</span>
+                </div>
+                <input type="range" class="form-range" id="durationRange" min="1" max="12" step="1" value="3">
+                <div class="d-flex justify-content-between text-muted mt-2" style="font-size: 0.8rem;">
+                    <span>1 mois</span>
+                    <span>12 mois</span>
+                </div>
+            </div>
+
+            <div class="calc-slider-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label for="incomeRange" class="fw-bold text-dark mb-0">Votre revenu mensuel net</label>
+                    <span class="badge bg-success bg-opacity-10 text-success fs-6 fw-bold px-3 py-1.5" id="incomeDisplay">300 000 FCFA</span>
+                </div>
+                <input type="range" class="form-range" id="incomeRange" min="50000" max="1000000" step="10000" value="300000">
+                <div class="d-flex justify-content-between text-muted mt-2" style="font-size: 0.8rem;">
+                    <span>50 000 FCFA</span>
+                    <span>1 000 000 FCFA</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results panel -->
+        <div class="col-lg-5">
+            <div class="calc-output-box rounded-end-4">
+                <div>
+                    <h4 class="fw-bold mb-4 border-bottom border-light border-opacity-25 pb-3">Détails de la simulation</h4>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="opacity-75">Taux d'intérêt :</span>
+                        <span class="fw-bold">5 % (Fixe)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="opacity-75">Intérêts totaux :</span>
+                        <span class="fw-bold" id="interestDisplay">-- FCFA</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="opacity-75">Montant total à rembourser :</span>
+                        <span class="fw-bold text-white fs-5" id="totalRepaymentDisplay">-- FCFA</span>
+                    </div>
+                    
+                    <hr class="bg-light opacity-25">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+                        <span class="opacity-75">Échéance mensuelle :</span>
+                        <h3 class="fw-bold text-white mb-0" id="monthlyRepaymentDisplay">-- FCFA</h3>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="opacity-75">Échéance hebdomadaire :</span>
+                        <span class="fw-bold fs-5" id="weeklyRepaymentDisplay">-- FCFA</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 p-2.5 rounded bg-white bg-opacity-10">
+                        <span class="opacity-75 small">Éligibilité estimée :</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill bg-white text-success fw-bold px-2.5 py-1" id="scoreValue">90/100</span>
+                            <span class="badge rounded-pill" id="scoreLevel" style="background-color: var(--accent-mint); color: #064e3b;">Excellent</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-3">
+                    <a href="{% url 'dashboard' %}" class="btn btn-light w-100 py-3 fw-bold text-success" style="color: var(--primary-dark) !important; border-radius: 12px;">
+                        Déposer mon dossier en ligne <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Services Grid -->
+<div id="services" class="py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold mb-2">Nos Solutions Digitales</h2>
+        <p class="text-muted col-md-8 mx-auto">Une suite complète d'outils financiers conçus pour stimuler l'économie locale et protéger les commerçants et agriculteurs.</p>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Service 1: Microcredit -->
+        <div class="col-md-4">
+            <div class="service-card">
+                <div class="icon-wrapper mb-4">
+                    <i class="fa-solid fa-hand-holding-dollar fs-3"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-3">Microcrédits Rapides</h4>
+                <p class="text-muted">
+                    Soumettez vos demandes de crédit en ligne avec vos documents justificatifs. Décaissement par Mobile Money sous 48h après approbation.
+                </p>
+                <ul class="list-unstyled mb-4 text-muted mt-auto" style="font-size: 0.9rem;">
+                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Remboursements hebdomadaires ou mensuels</li>
+                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Échéancier généré automatiquement</li>
+                    <li><i class="fa-solid fa-circle-check text-success me-2"></i> Suivi d'éligibilité en temps réel</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Service 2: Insurance -->
+        <div class="col-md-4">
+            <div class="service-card">
+                <div class="icon-wrapper mb-4">
+                    <i class="fa-solid fa-shield-halved fs-3"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-3">Assurances Mobiles</h4>
+                <p class="text-muted">
+                    Protégez votre famille et votre commerce grâce à des formules d'assurance simplifiées. Souscription en quelques clics depuis votre compte.
+                </p>
+                <ul class="list-unstyled mb-4 text-muted mt-auto" style="font-size: 0.9rem;">
+                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Formules décès et invalidité</li>
+                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Notification de renouvellement à J-15</li>
+                    <li><i class="fa-solid fa-circle-check text-success me-2"></i> Activation et gestion instantanées</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Service 3: Support -->
+        <div class="col-md-4">
+            <div class="service-card">
+                <div class="icon-wrapper mb-4">
+                    <i class="fa-regular fa-comments fs-3"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-3">Support Client Live Chat</h4>
+                <p class="text-muted">
+                    Ne perdez plus de temps au téléphone. Ouvrez un chat instantané avec votre conseiller dédié directement depuis la plateforme.
+                </p>
+                <ul class="list-unstyled mb-4 text-muted mt-auto" style="font-size: 0.9rem;">
+                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> WebSocket en temps réel</li>
+                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Indicateurs de frappe et de présence</li>
+                    <li><i class="fa-solid fa-circle-check text-success me-2"></i> Historique de chat persistant</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Section -->
+<div class="py-5 bg-success bg-opacity-10 rounded-4 my-5 px-4" style="background-color: var(--primary-light) !important;">
+    <div class="row text-center g-4">
+        <div class="col-md-3">
+            <h2 class="display-5 fw-bold text-success mb-1" style="color: var(--primary-emerald) !important;">18 000+</h2>
+            <p class="text-muted mb-0 fw-bold">Clients Actifs</p>
+        </div>
+        <div class="col-md-3">
+            <h2 class="display-5 fw-bold text-success mb-1" style="color: var(--primary-emerald) !important;">5</h2>
+            <p class="text-muted mb-0 fw-bold">Régions couvertes</p>
+        </div>
+        <div class="col-md-3">
+            <h2 class="display-5 fw-bold text-success mb-1" style="color: var(--primary-emerald) !important;">&lt; 48h</h2>
+            <p class="text-muted mb-0 fw-bold">Délai de traitement cible</p>
+        </div>
+        <div class="col-md-3">
+            <h2 class="display-5 fw-bold text-success mb-1" style="color: var(--primary-emerald) !important;">BCEAO</h2>
+            <p class="text-muted mb-0 fw-bold">Institution Agréée</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live Credit Simulator Script
+    const amountRange = document.getElementById('amountRange');
+    const durationRange = document.getElementById('durationRange');
+    const incomeRange = document.getElementById('incomeRange');
+
+    const amountDisplay = document.getElementById('amountDisplay');
+    const durationDisplay = document.getElementById('durationDisplay');
+    const incomeDisplay = document.getElementById('incomeDisplay');
+
+    const interestDisplay = document.getElementById('interestDisplay');
+    const totalRepaymentDisplay = document.getElementById('totalRepaymentDisplay');
+    const monthlyRepaymentDisplay = document.getElementById('monthlyRepaymentDisplay');
+    const weeklyRepaymentDisplay = document.getElementById('weeklyRepaymentDisplay');
+
+    const scoreValue = document.getElementById('scoreValue');
+    const scoreLevel = document.getElementById('scoreLevel');
+
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function calculate() {
+        const amount = parseInt(amountRange.value);
+        const duration = parseInt(durationRange.value);
+        const income = parseInt(incomeRange.value);
+
+        // Update slider badges
+        amountDisplay.innerText = formatNumber(amount) + " FCFA";
+        durationDisplay.innerText = duration + " mois";
+        incomeDisplay.innerText = formatNumber(income) + " FCFA";
+
+        // Simple interest logic (5% fixed per duration)
+        const interestRate = 0.05;
+        const interest = Math.round(amount * interestRate * (duration / 12));
+        const totalRepayment = amount + interest;
+        const monthly = Math.round(totalRepayment / duration);
+        const weekly = Math.round(totalRepayment / (duration * 4));
+
+        // Display results
+        interestDisplay.innerText = formatNumber(interest) + " FCFA";
+        totalRepaymentDisplay.innerText = formatNumber(totalRepayment) + " FCFA";
+        monthlyRepaymentDisplay.innerText = formatNumber(monthly) + " FCFA";
+        weeklyRepaymentDisplay.innerText = formatNumber(weekly) + " FCFA";
+
+        // Eligibility score calculation based on ratio of monthly repayment to net income
+        const ratio = monthly / income;
+        let score = 90;
+
+        if (ratio <= 0.2) {
+            score = Math.round(95 - (amount / 1000000) * 8);
+        } else if (ratio <= 0.4) {
+            score = Math.round(85 - (ratio - 0.2) * 160);
+        } else {
+            score = Math.round(Math.max(10, 53 - (ratio - 0.4) * 110));
+        }
+
+        // Display eligibility badge details
+        scoreValue.innerText = score + "/100";
+        scoreValue.className = "badge rounded-pill px-2.5 py-1 ";
+
+        if (score >= 75) {
+            scoreValue.classList.add("bg-success", "bg-opacity-10", "text-success");
+            scoreLevel.innerText = "Excellent";
+            scoreLevel.style.backgroundColor = "var(--primary-light)";
+            scoreLevel.style.color = "var(--primary-emerald)";
+        } else if (score >= 50) {
+            scoreValue.classList.add("bg-warning", "bg-opacity-10", "text-warning");
+            scoreLevel.innerText = "Moyen";
+            scoreLevel.style.backgroundColor = "rgba(234, 179, 8, 0.1)";
+            scoreLevel.style.color = "#d97706";
+        } else {
+            scoreValue.classList.add("bg-danger", "bg-opacity-10", "text-danger");
+            scoreLevel.innerText = "Risqué";
+            scoreLevel.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+            scoreLevel.style.color = "#dc2626";
+        }
+    }
+
+    amountRange.addEventListener('input', calculate);
+    durationRange.addEventListener('input', calculate);
+    incomeRange.addEventListener('input', calculate);
+
+    // Initial calculation
+    calculate();
+</script>
+{% endblock %}

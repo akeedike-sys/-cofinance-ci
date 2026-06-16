@@ -1,0 +1,550 @@
+{% extends 'base.html' %}
+
+{% block title %}Espace Client - COFINANCE CI{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Tabs customization */
+    .dashboard-tabs .nav-link {
+        color: var(--text-muted);
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+    .dashboard-tabs .nav-link:hover {
+        color: var(--primary-emerald);
+        background-color: var(--primary-light);
+    }
+    .dashboard-tabs .nav-link.active {
+        background: linear-gradient(135deg, var(--primary-emerald), var(--primary-dark)) !important;
+        color: white !important;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Pulse animation for active chat dot */
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .pulse-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--primary-emerald);
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    /* Workflow Timeline */
+    .workflow-container {
+        position: relative;
+        padding-top: 10px;
+    }
+    
+    .workflow-line-bg {
+        position: absolute;
+        top: 26px;
+        left: 10%;
+        right: 10%;
+        height: 4px;
+        background-color: var(--border-color);
+        z-index: 1;
+    }
+
+    .workflow-line-progress {
+        position: absolute;
+        top: 26px;
+        left: 10%;
+        height: 4px;
+        background-color: var(--primary-emerald);
+        z-index: 2;
+        transition: width 0.4s ease;
+    }
+
+    .workflow-step-node {
+        position: relative;
+        z-index: 3;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--bg-card);
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        transition: all 0.3s ease;
+        margin: 0 auto;
+    }
+
+    .workflow-step-active .workflow-step-node {
+        border-color: var(--primary-emerald);
+        background-color: var(--primary-emerald);
+        color: white;
+        box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .workflow-step-completed .workflow-step-node {
+        border-color: var(--primary-emerald);
+        background-color: var(--primary-emerald);
+        color: white;
+    }
+
+    /* Badges with dot indicators */
+    .status-dot-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .badge-paid {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    .badge-paid .status-dot {
+        background-color: #10b981;
+    }
+
+    .badge-overdue {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    .badge-overdue .status-dot {
+        background-color: #ef4444;
+    }
+
+    .badge-pending {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    .badge-pending .status-dot {
+        background-color: #f59e0b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Left Column: User Profile & Chat Support -->
+    <div class="col-lg-4">
+        <!-- Profile Card -->
+        <div class="card card-premium p-4 mb-4" style="border-top: 4px solid var(--primary-emerald);">
+            <div class="d-flex align-items-center mb-3">
+                <div class="bg-success text-white rounded-circle p-3 me-3" style="width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-emerald), var(--primary-dark));">
+                    <i class="fa-solid fa-user fs-4 text-white"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">{{ user.username }}</h5>
+                    <span class="badge bg-success bg-opacity-10 text-success badge-custom mt-1" style="background-color: var(--primary-light) !important; color: var(--primary-emerald) !important;">Client</span>
+                </div>
+            </div>
+            <div class="border-top border-light border-opacity-25 pt-3 text-muted" style="font-size: 0.9rem;">
+                <div class="d-flex justify-content-between mb-2.5">
+                    <span>Téléphone :</span>
+                    <strong class="text-dark">{{ user.phone|default:"Non spécifié" }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2.5">
+                    <span>Région :</span>
+                    <strong class="text-dark">{{ user.region|default:"Non spécifié" }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2.5">
+                    <span>Revenu mensuel :</span>
+                    <strong class="text-dark">{{ user.monthly_income }} FCFA</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Inscription :</span>
+                    <strong class="text-dark">{{ user.registration_date|date:"d/m/Y" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Session Card -->
+        <div class="card card-premium p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-regular fa-comments me-2 text-success"></i>Support Conseiller</h5>
+            <p class="text-muted small">
+                Un problème avec vos remboursements ou une question sur nos assurances ? Échangez en temps réel avec un agent.
+            </p>
+            {% if active_chat %}
+                <div class="alert alert-success d-flex align-items-center p-2.5 mb-3" style="font-size: 0.85rem;">
+                    <span class="pulse-dot me-2"></span>
+                    <div class="text-success">Session de chat active (#{{ active_chat.id }})</div>
+                </div>
+                <a href="{% url 'chat_demo' %}" class="btn btn-premium w-100 py-2.5">
+                    Ouvrir le chat <i class="fa-solid fa-arrow-up-right-from-square ms-2"></i>
+                </a>
+            {% else %}
+                <button data-action="start-support" class="btn btn-outline-premium w-100 py-2.5">
+                    Démarrer un chat
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Tabs for Credit & Insurance -->
+    <div class="col-lg-8">
+        <ul class="nav nav-pills dashboard-tabs mb-4 gap-2" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active px-4 py-2.5 fw-bold" id="credits-tab" data-bs-toggle="tab" data-bs-target="#credits-pane" type="button" role="tab" aria-controls="credits-pane" aria-selected="true">
+                    <i class="fa-solid fa-hand-holding-dollar me-2"></i>Mes Microcrédits
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-4 py-2.5 fw-bold" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance-pane" type="button" role="tab" aria-controls="insurance-pane" aria-selected="false">
+                    <i class="fa-solid fa-shield-halved me-2"></i>Mes Assurances
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="dashboardTabsContent">
+            <!-- Credits Pane -->
+            <div class="tab-pane fade show active" id="credits-pane" role="tabpanel" aria-labelledby="credits-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-dark mb-0">Demandes de Crédit</h4>
+                    <button class="btn btn-premium" data-bs-toggle="modal" data-bs-target="#applyCreditModal">
+                        <i class="fa-solid fa-plus me-2"></i>Nouvelle Demande
+                    </button>
+                </div>
+
+                {% if credits %}
+                    {% for credit in credits %}
+                        <div class="card card-premium p-4 mb-4">
+                            <div class="d-flex justify-content-between align-items-start border-bottom border-light border-opacity-25 pb-3 mb-3">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1">Dossier #{{ credit.id }} - <span class="text-success">{{ credit.amount_requested }} FCFA</span></h5>
+                                    <p class="text-muted small mb-0">
+                                        Durée: {{ credit.duration_months }} mois | Fréquence: {{ credit.get_repayment_frequency_display }}
+                                    </p>
+                                </div>
+                                <span class="badge badge-custom 
+                                    {% if credit.status == 'submitted' %}bg-warning text-dark
+                                    {% elif credit.status == 'analyzing' %}bg-info text-white
+                                    {% elif credit.status == 'approved' %}bg-success bg-opacity-25 text-success
+                                    {% elif credit.status == 'disbursed' %}bg-success text-white
+                                    {% else %}bg-danger text-white{% endif %}">
+                                    {{ credit.get_status_display }}
+                                </span>
+                            </div>
+
+                            <!-- Workflow Step Progress for non-rejected items -->
+                            {% if credit.status != 'rejected' %}
+                                <div class="workflow-container my-4 pb-2">
+                                    <div class="workflow-line-bg"></div>
+                                    <div class="workflow-line-progress" data-status="{{ credit.status }}" class="workflow-line-progress"></div>
+                                    <div class="row text-center">
+                                        <div class="col-3 workflow-step-completed">
+                                            <div class="workflow-step-node"><i class="fa-solid fa-check" style="font-size: 0.75rem;"></i></div>
+                                            <div class="small fw-semibold mt-1 text-muted">Soumis</div>
+                                        </div>
+                                        <div class="col-3 {% if credit.status == 'analyzing' %}workflow-step-active{% elif credit.status == 'approved' or credit.status == 'disbursed' %}workflow-step-completed{% endif %}">
+                                            <div class="workflow-step-node">
+                                                {% if credit.status == 'approved' or credit.status == 'disbursed' %}
+                                                    <i class="fa-solid fa-check" style="font-size: 0.75rem;"></i>
+                                                {% else %}2{% endif %}
+                                            </div>
+                                            <div class="small fw-semibold mt-1 text-muted">Analyse</div>
+                                        </div>
+                                        <div class="col-3 {% if credit.status == 'approved' %}workflow-step-active{% elif credit.status == 'disbursed' %}workflow-step-completed{% endif %}">
+                                            <div class="workflow-step-node">
+                                                {% if credit.status == 'disbursed' %}
+                                                    <i class="fa-solid fa-check" style="font-size: 0.75rem;"></i>
+                                                {% else %}3{% endif %}
+                                            </div>
+                                            <div class="small fw-semibold mt-1 text-muted">Approuvé</div>
+                                        </div>
+                                        <div class="col-3 {% if credit.status == 'disbursed' %}workflow-step-active{% endif %}">
+                                            <div class="workflow-step-node">4</div>
+                                            <div class="small fw-semibold mt-1 text-muted">Décaissé</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger d-flex align-items-center p-2.5 my-3" style="font-size: 0.85rem; background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                                    <i class="fa-solid fa-circle-xmark me-2"></i>
+                                    <div>Ce dossier de crédit a été rejeté lors de l'analyse.</div>
+                                </div>
+                            {% endif %}
+
+                            <div class="row g-3 text-center border-top border-light border-opacity-25 pt-3 mt-1">
+                                <div class="col-4 border-end border-light border-opacity-25">
+                                    <small class="text-muted d-block" style="font-size: 0.8rem;">Taux d'intérêt</small>
+                                    <strong class="text-dark fs-6">{{ credit.interest_rate }} %</strong>
+                                </div>
+                                <div class="col-4 border-end border-light border-opacity-25">
+                                    <small class="text-muted d-block" style="font-size: 0.8rem;">Score d'éligibilité</small>
+                                    <strong class="text-success fs-6">{{ credit.eligibility_score }}/100</strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block" style="font-size: 0.8rem;">Soumis le</small>
+                                    <strong class="text-dark fs-6">{{ credit.created_at|date:"d/m/Y" }}</strong>
+                                </div>
+                            </div>
+
+                            <!-- Repayment Schedule if approved or disbursed -->
+                            {% if credit.status == 'approved' or credit.status == 'disbursed' %}
+                                <div class="mt-4 pt-3 border-top border-light border-opacity-25">
+                                    <h6 class="fw-bold text-dark mb-3"><i class="fa-regular fa-calendar-check me-2 text-success"></i>Échéancier de remboursement</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover align-middle" style="font-size: 0.85rem;">
+                                            <thead>
+                                                <tr class="table-light">
+                                                    <th>N°</th>
+                                                    <th>Date d'échéance</th>
+                                                    <th>Montant Dû</th>
+                                                    <th>Montant Payé</th>
+                                                    <th>Pénalités</th>
+                                                    <th>Statut</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in credit.schedule.all %}
+                                                    <tr>
+                                                        <td class="fw-bold">#{{ item.number }}</td>
+                                                        <td>{{ item.due_date|date:"d/m/Y" }}</td>
+                                                        <td class="fw-bold text-dark">{{ item.amount_due }} FCFA</td>
+                                                        <td class="text-success">{{ item.amount_paid }} FCFA</td>
+                                                        <td class="text-danger fw-semibold">{{ item.penalties_accumulated }} FCFA</td>
+                                                        <td>
+                                                            {% if item.status == 'paid' %}
+                                                                <span class="status-dot-badge badge-paid">
+                                                                    <span class="status-dot"></span>Payé
+                                                                </span>
+                                                            {% elif item.status == 'overdue' %}
+                                                                <span class="status-dot-badge badge-overdue">
+                                                                    <span class="status-dot"></span>En retard
+                                                                </span>
+                                                            {% else %}
+                                                                <span class="status-dot-badge badge-pending">
+                                                                    <span class="status-dot"></span>Non payé
+                                                                </span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 card card-premium text-muted">
+                        <i class="fa-solid fa-folder-open fs-1 mb-3 text-muted"></i>
+                        <p class="mb-0">Vous n'avez pas encore soumis de demande de microcrédit.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Insurance Pane -->
+            <div class="tab-pane fade" id="insurance-pane" role="tabpanel" aria-labelledby="insurance-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-dark mb-0">Mes Polices d'Assurance</h4>
+                    <button class="btn btn-premium" data-bs-toggle="modal" data-bs-target="#subscribeInsuranceModal">
+                        <i class="fa-solid fa-shield-halved me-2"></i>Souscrire à une Formule
+                    </button>
+                </div>
+
+                {% if policies %}
+                    <div class="row g-3">
+                        {% for policy in policies %}
+                            <div class="col-md-6">
+                                <div class="card card-premium p-4 h-100" style="border-left: 4px solid var(--primary-emerald);">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="fw-bold text-success mb-0" style="color: var(--primary-emerald) !important;">{{ policy.product.name }}</h5>
+                                        <span class="badge rounded-pill {% if policy.status == 'active' %}bg-success text-white{% else %}bg-secondary text-white{% endif %}" style="font-size: 0.75rem;">
+                                            {{ policy.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <p class="text-muted small mb-4">{{ policy.product.description }}</p>
+                                    <div class="border-top border-light border-opacity-25 pt-2" style="font-size: 0.85rem;">
+                                        <div class="d-flex justify-content-between text-muted">
+                                            <span>Couverture du :</span>
+                                            <strong class="text-dark">{{ policy.start_date|date:"d/m/Y" }}</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between text-muted mt-1.5">
+                                            <span>Jusqu'au :</span>
+                                            <strong class="text-dark">{{ policy.end_date|date:"d/m/Y" }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 card card-premium text-muted">
+                        <i class="fa-solid fa-shield-halved fs-1 mb-3 text-muted"></i>
+                        <p class="mb-0">Vous n'avez aucune police d'assurance active.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- APPLY CREDIT MODAL -->
+<div class="modal fade" id="applyCreditModal" tabindex="-1" aria-labelledby="applyCreditModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="applyCreditModalLabel">Demande de Microcrédit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="applyCreditForm" enctype="multipart/form-data">
+                <div class="modal-body py-4">
+                    <div class="mb-3">
+                        <label for="amount_requested" class="form-label fw-bold small">Montant souhaité (FCFA)</label>
+                        <input type="number" class="form-control bg-light" id="amount_requested" name="amount_requested" required min="10000" placeholder="ex: 150000">
+                    </div>
+                    <div class="mb-3">
+                        <label for="duration_months" class="form-label fw-bold small">Durée (en mois)</label>
+                        <select class="form-select bg-light" id="duration_months" name="duration_months" required>
+                            <option value="1">1 mois</option>
+                            <option value="2">2 mois</option>
+                            <option value="3" selected>3 mois</option>
+                            <option value="6">6 mois</option>
+                            <option value="12">12 mois</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="repayment_frequency" class="form-label fw-bold small">Fréquence des remboursements</label>
+                        <select class="form-select bg-light" id="repayment_frequency" name="repayment_frequency" required>
+                            <option value="HEBDO">Hebdomadaire</option>
+                            <option value="MENSUEL" selected>Mensuelle</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="files" class="form-label fw-bold small">Pièces justificatives (CNI, Facture CIE/SODECI, etc.)</label>
+                        <input class="form-control bg-light" type="file" id="files" name="uploaded_files" multiple>
+                        <div class="form-text text-muted">Vous pouvez sélectionner plusieurs images ou documents PDF.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-premium">Soumettre le dossier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- SUBSCRIBE INSURANCE MODAL -->
+<div class="modal fade" id="subscribeInsuranceModal" tabindex="-1" aria-labelledby="subscribeInsuranceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="subscribeInsuranceModalLabel">Souscription Assurance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="subscribeInsuranceForm">
+                <div class="modal-body py-4">
+                    <div class="mb-3">
+                        <label for="product" class="form-label fw-bold small">Formule d'assurance</label>
+                        <select class="form-select bg-light" id="product" name="product" required>
+                            {% for ins in insurances %}
+                                <option value="{{ ins.id }}">{{ ins.name }} - {{ ins.premium }} FCFA ({{ ins.duration_months }} mois)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <p class="text-muted small">
+                        La souscription prendra effet immédiatement à la validation. Le montant de la prime sera déduit de votre compte ou payé par Mobile Money.
+                    </p>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-premium">Valider la souscription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Start Chat Support Session
+    function startSupportSession() {
+        fetch('/api/support/conversations/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = "{% url 'chat_demo' %}";
+            } else {
+                alert("Impossible d'ouvrir une session de support.");
+            }
+        })
+        .catch(err => console.error("Erreur support chat:", err));
+    }
+
+    // Submit Credit Request
+    document.getElementById('applyCreditForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch('/api/credits/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                response.json().then(data => alert(JSON.stringify(data)));
+            }
+        })
+        .catch(err => console.error(err));
+    });
+
+    // Subscribe to Insurance
+    document.getElementById('subscribeInsuranceForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const product_id = document.getElementById('product').value;
+        
+        fetch('/api/insurances/policies/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ product: product_id })
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                response.json().then(data => alert(JSON.stringify(data)));
+            }
+        })
+        .catch(err => console.error(err));
+    });
+</script>
+{% endblock %}
+
+
+
+

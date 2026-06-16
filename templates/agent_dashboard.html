@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord Agent - COFINANCE CI{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* KPI Glowing Cards */
+    .kpi-card {
+        border-top: 4px solid var(--primary-emerald) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .kpi-card-recovery { border-top-color: #10b981 !important; }
+    .kpi-card-insurances { border-top-color: #06b6d4 !important; }
+    .kpi-card-chats { border-top-color: #eab308 !important; }
+    .kpi-card-credits { border-top-color: #3b82f6 !important; }
+
+    .kpi-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    /* List Group Custom */
+    .chat-ticket-item {
+        background-color: var(--bg-body);
+        border: 1px solid var(--border-color);
+        border-radius: 12px !important;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .chat-ticket-item:hover {
+        border-color: var(--primary-emerald);
+        background-color: var(--primary-light);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Filters Block -->
+    <div class="col-12">
+        <div class="card card-premium p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-filter text-success me-2" style="color: var(--primary-emerald) !important;"></i>Filtres de performance</h5>
+            <form id="filterForm" class="row g-3">
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label small fw-bold">Date de début</label>
+                    <input type="date" class="form-control bg-light" id="start_date" name="start_date">
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label small fw-bold">Date de fin</label>
+                    <input type="date" class="form-control bg-light" id="end_date" name="end_date">
+                </div>
+                <div class="col-md-3">
+                    <label for="region" class="form-label small fw-bold">Région</label>
+                    <select class="form-select bg-light" id="region" name="region">
+                        <option value="">Toutes les régions</option>
+                        {% for reg in regions %}
+                            <option value="{{ reg }}">{{ reg }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-premium w-100 py-2.5">
+                        <i class="fa-solid fa-arrows-rotate me-2"></i>Actualiser les KPIs
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs row -->
+<div class="row g-4 mb-4">
+    <!-- Recovery Rate -->
+    <div class="col-md-3">
+        <div class="card card-premium kpi-card kpi-card-recovery p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-muted small fw-bold mb-1">RECOUVREMENT</div>
+                    <h3 class="fw-bold text-success mb-0" id="kpi-recovery">-- %</h3>
+                </div>
+                <div class="kpi-icon-box bg-success bg-opacity-10 text-success" style="background-color: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important;">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+            </div>
+            <p class="text-muted mt-3 mb-0" id="kpi-repayment-sums" style="font-size: 0.8rem;">Dû: -- | Payé: --</p>
+        </div>
+    </div>
+    <!-- Active Insurances -->
+    <div class="col-md-3">
+        <div class="card card-premium kpi-card kpi-card-insurances p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-muted small fw-bold mb-1">ASSURANCES ACTIVES</div>
+                    <h3 class="fw-bold text-info mb-0" id="kpi-insurances">--</h3>
+                </div>
+                <div class="kpi-icon-box bg-info bg-opacity-10 text-info" style="background-color: rgba(6, 182, 212, 0.1) !important; color: #06b6d4 !important;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+            </div>
+            <p class="text-muted mt-3 mb-0" style="font-size: 0.8rem;">Souscriptions actives</p>
+        </div>
+    </div>
+    <!-- Open Support Conversations -->
+    <div class="col-md-3">
+        <div class="card card-premium kpi-card kpi-card-chats p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-muted small fw-bold mb-1">CHATS OUVERTS</div>
+                    <h3 class="fw-bold text-warning mb-0" id="kpi-chats">--</h3>
+                </div>
+                <div class="kpi-icon-box bg-warning bg-opacity-10 text-warning" style="background-color: rgba(234, 179, 8, 0.1) !important; color: #eab308 !important;">
+                    <i class="fa-regular fa-comments"></i>
+                </div>
+            </div>
+            <p class="text-muted mt-3 mb-0" style="font-size: 0.8rem;">Demandes en attente</p>
+        </div>
+    </div>
+    <!-- Total Pending Credits -->
+    <div class="col-md-3">
+        <div class="card card-premium kpi-card kpi-card-credits p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-muted small fw-bold mb-1">DOSSIERS SOUMIS</div>
+                    <h3 class="fw-bold text-primary mb-0" id="kpi-pending-credits">--</h3>
+                </div>
+                <div class="kpi-icon-box bg-primary bg-opacity-10 text-primary" style="background-color: rgba(59, 130, 246, 0.1) !important; color: #3b82f6 !important;">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+            </div>
+            <p class="text-muted mt-3 mb-0" style="font-size: 0.8rem;">Crédits en attente d'analyse</p>
+        </div>
+    </div>
+</div>
+
+<!-- Main Row: Left list of loans, Right Chat tickets / Repayments tool -->
+<div class="row g-4">
+    <!-- Credit requests management list -->
+    <div class="col-lg-8">
+        <div class="card card-premium p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-list-check text-success me-2" style="color: var(--primary-emerald) !important;"></i>Gestion des dossiers crédits</h5>
+                <button class="btn btn-sm btn-outline-premium py-2" data-bs-toggle="modal" data-bs-target="#recordRepaymentModal">
+                    <i class="fa-solid fa-money-bill-wave me-2"></i>Saisir un remboursement
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr class="table-light">
+                            <th>ID</th>
+                            <th>Client</th>
+                            <th>Montant</th>
+                            <th>Fréquence</th>
+                            <th>Score</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for credit in credits %}
+                            <tr>
+                                <td class="fw-bold">#{{ credit.id }}</td>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ credit.client.username }}</div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">{{ credit.client.region }}</small>
+                                </td>
+                                <td class="fw-bold text-dark">{{ credit.amount_requested }} FCFA</td>
+                                <td>{{ credit.get_repayment_frequency_display }}</td>
+                                <td>
+                                    <span class="badge bg-success bg-opacity-10 text-success" style="background-color: var(--primary-light) !important; color: var(--primary-emerald) !important;">{{ credit.eligibility_score }}/100</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-custom 
+                                        {% if credit.status == 'submitted' %}bg-warning text-dark
+                                        {% elif credit.status == 'analyzing' %}bg-info text-white
+                                        {% elif credit.status == 'approved' %}bg-success bg-opacity-25 text-success
+                                        {% elif credit.status == 'disbursed' %}bg-success text-white
+                                        {% else %}bg-danger text-white{% endif %}">
+                                        {{ credit.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if credit.status == 'submitted' %}
+                                            <button class="btn btn-outline-info" data-action="transition" data-credit-id="{{ credit.id }}" data-status="analyzing" class="btn btn-outline-info">Prendre en charge</button>
+                                        {% elif credit.status == 'analyzing' %}
+                                            <button class="btn btn-success" data-action="transition" data-credit-id="{{ credit.id }}" data-status="approved" class="btn btn-success">Approuver</button>
+                                            <button class="btn btn-danger" data-action="transition" data-credit-id="{{ credit.id }}" data-status="rejected" class="btn btn-danger">Rejeter</button>
+                                        {% elif credit.status == 'approved' %}
+                                            <button class="btn btn-primary" data-action="transition" data-credit-id="{{ credit.id }}" data-status="disbursed" class="btn btn-primary">Décaisser</button>
+                                        {% else %}
+                                            <span class="text-muted small">Aucune action</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Support Chat Tickets -->
+    <div class="col-lg-4">
+        <div class="card card-premium p-4 mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-regular fa-comments text-success me-2" style="color: var(--primary-emerald) !important;"></i>Chats de support actifs</h5>
+            <div class="list-group list-group-flush" id="chatTickets">
+                {% if conversations %}
+                    {% for conv in conversations %}
+                        <div class="list-group-item chat-ticket-item p-3 border-0">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold text-dark mb-0">Client: {{ conv.client.username }}</h6>
+                                <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">Ouvert</span>
+                            </div>
+                            <p class="text-muted small mb-2">
+                                Responsable: <strong>{{ conv.agent.username|default:"Non assigné" }}</strong>
+                            </p>
+                            <div class="d-flex gap-2">
+                                {% if not conv.agent %}
+                                    <button data-action="assign-chat" data-conv-id="{{ conv.id }}" class="btn btn-sm btn-outline-premium py-1">S'assigner</button>
+                                {% endif %}
+                                <a href="{% url 'chat_demo' %}" class="btn btn-sm btn-premium py-1">Rejoindre</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4 text-muted small">
+                        Aucun chat de support en attente.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Status Chart Card -->
+        <div class="card card-premium p-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-pie text-success me-2" style="color: var(--primary-emerald) !important;"></i>Volume des crédits</h5>
+            <div style="position: relative; height: 200px;">
+                <canvas id="creditsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RECORD REPAYMENT MODAL -->
+<div class="modal fade" id="recordRepaymentModal" tabindex="-1" aria-labelledby="recordRepaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="recordRepaymentModalLabel">Enregistrer un Remboursement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="recordRepaymentForm">
+                <div class="modal-body py-4">
+                    <div class="mb-3">
+                        <label for="credit_select" class="form-label fw-bold small">Sélectionner le dossier crédit</label>
+                        <select class="form-select bg-light" id="credit_select" onchange="loadInstallments(this.value)" required>
+                            <option value="">-- Choisir un dossier --</option>
+                            {% for credit in credits %}
+                                {% if credit.status == 'disbursed' %}
+                                    <option value="{{ credit.id }}">Dossier #{{ credit.id }} - Client: {{ credit.client.username }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="schedule_item" class="form-label fw-bold small">Échéance concernée</label>
+                        <select class="form-select bg-light" id="schedule_item" name="schedule_item" required disabled>
+                            <option value="">-- Choisir l'échéance --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="amount" class="form-label fw-bold small">Montant remboursé (FCFA)</label>
+                        <input type="number" class="form-control bg-light" id="amount" name="amount" required min="100">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-premium">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    let chartInstance = null;
+
+    // Load stats on page load
+    document.addEventListener("DOMContentLoaded", function() {
+        loadKPIs();
+        
+        // Handle filter form submission
+        document.getElementById("filterForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            loadKPIs();
+        });
+    });
+
+    // Handle theme switcher trigger to reload styles in Chart.js
+    window.addEventListener('themeChanged', () => {
+        loadKPIs();
+    });
+
+    function loadKPIs() {
+        const start = document.getElementById("start_date").value;
+        const end = document.getElementById("end_date").value;
+        const region = document.getElementById("region").value;
+        
+        let url = `/api/dashboard/stats/?`;
+        if (start) url += `start_date=${start}&`;
+        if (end) url += `end_date=${end}&`;
+        if (region) url += `region=${region}&`;
+        
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                // Update text indicators
+                document.getElementById("kpi-recovery").innerText = data.recovery_rate + " %";
+                document.getElementById("kpi-repayment-sums").innerText = `Dû: ${data.total_due_in_period} | Payé: ${data.total_paid_in_period}`;
+                document.getElementById("kpi-insurances").innerText = data.active_insurances;
+                document.getElementById("kpi-chats").innerText = data.open_conversations;
+                
+                const submittedCount = data.credits_volume_by_status.submitted || 0;
+                document.getElementById("kpi-pending-credits").innerText = submittedCount;
+                
+                // Update chart
+                updateChart(data.credits_volume_by_status);
+            })
+            .catch(err => console.error("Erreur chargement KPIs:", err));
+    }
+
+    function updateChart(volumes) {
+        const ctx = document.getElementById('creditsChart').getContext('2d');
+        
+        const isDark = document.body.classList.contains('dark-theme') || document.documentElement.classList.contains('dark-theme');
+        const textLabelColor = isDark ? '#94a3b8' : '#64748b';
+
+        const data = {
+            labels: ['Soumise', 'En analyse', 'Approuvée', 'Décaissée', 'Rejetée'],
+            datasets: [{
+                data: [
+                    volumes.submitted || 0,
+                    volumes.analyzing || 0,
+                    volumes.approved || 0,
+                    volumes.disbursed || 0,
+                    volumes.rejected || 0
+                ],
+                backgroundColor: ['#eab308', '#06b6d4', '#10b981', '#3b82f6', '#ef4444'],
+                borderWidth: 0
+            }]
+        };
+        
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+        
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            color: textLabelColor,
+                            font: { family: 'Outfit', size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Assign Support Chat
+    function assignChat(convId) {
+        fetch(`/api/support/conversations/${convId}/assign/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => {
+            if (res.ok) {
+                location.reload();
+            } else {
+                alert("Erreur lors de l'assignation.");
+            }
+        });
+    }
+
+    // Transition Credit State
+    function transitionCredit(creditId, targetStatus) {
+        fetch(`/api/credits/${creditId}/transition/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ status: targetStatus })
+        })
+        .then(res => {
+            if (res.ok) {
+                location.reload();
+            } else {
+                res.json().then(data => alert(data.detail || JSON.stringify(data)));
+            }
+        });
+    }
+
+    // Load installments dynamically for record repayment modal
+    function loadInstallments(creditId) {
+        const select = document.getElementById("schedule_item");
+        select.innerHTML = '<option value="">-- Choisir l\'échéance --</option>';
+        select.disabled = true;
+        
+        if (!creditId) return;
+        
+        fetch(`/api/credits/${creditId}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.schedule && data.schedule.length > 0) {
+                    data.schedule.forEach(item => {
+                        // Only add unpaid installments
+                        if (item.status !== 'paid') {
+                            const option = document.createElement("option");
+                            option.value = item.id;
+                            option.text = `Échéance #${item.number} (Due le ${item.due_date}) - Restant: ${item.amount_due - item.amount_paid} FCFA`;
+                            select.appendChild(option);
+                        }
+                    });
+                    select.disabled = false;
+                }
+            })
+            .catch(err => console.error("Erreur chargement échéances:", err));
+    }
+
+    // Submit repayment record
+    document.getElementById("recordRepaymentForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const scheduleItem = document.getElementById("schedule_item").value;
+        const amount = document.getElementById("amount").value;
+        
+        fetch('/api/repayments/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                schedule_item: scheduleItem,
+                amount: amount
+            })
+        })
+        .then(res => {
+            if (res.ok) {
+                location.reload();
+            } else {
+                res.json().then(data => alert(data.detail || JSON.stringify(data)));
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+
+
+
+
+

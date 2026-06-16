@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+
+{% block title %}Support Chat Temps Réel - COFINANCE CI{% endblock %}
+
+{% block extra_head %}
+<style>
+    .chat-container {
+        height: 580px;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+    }
+
+    .chat-header {
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, var(--primary-emerald), var(--primary-dark));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 1.5rem;
+        overflow-y: auto;
+        background-color: var(--bg-body);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        /* Scrollbar inside messages */
+    }
+    
+    .chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+    .chat-messages::-webkit-scrollbar-track {
+        background: var(--bg-body);
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+    }
+
+    .chat-bubble {
+        max-width: 70%;
+        padding: 0.8rem 1.2rem;
+        border-radius: 16px;
+        font-size: 0.95rem;
+        position: relative;
+        line-height: 1.4;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        transition: all 0.2s ease;
+    }
+
+    .chat-bubble-me {
+        background: linear-gradient(135deg, var(--primary-emerald), var(--primary-dark));
+        color: white !important;
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
+    }
+
+    .chat-bubble-other {
+        background-color: var(--bg-card);
+        color: var(--text-main);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+        border: 1px solid var(--border-color);
+    }
+
+    .chat-time {
+        font-size: 0.7rem;
+        margin-top: 6px;
+        display: block;
+        opacity: 0.75;
+    }
+
+    .chat-bubble-me .chat-time {
+        text-align: right;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .chat-bubble-other .chat-time {
+        text-align: left;
+        color: var(--text-muted);
+    }
+
+    .chat-input-area {
+        padding: 1.25rem;
+        background-color: var(--bg-card);
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Typing indicator dot bounce animation */
+    .typing-indicator {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        padding: 0.4rem 1.5rem;
+        background-color: var(--bg-body);
+        font-style: italic;
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .typing-dots {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .typing-dot {
+        width: 6px;
+        height: 6px;
+        background-color: var(--text-muted);
+        border-radius: 50%;
+        animation: typingBounce 1.4s infinite ease-in-out both;
+        opacity: 0.6;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes typingBounce {
+        0%, 80%, 100% { transform: scale(0.6); }
+        40% { transform: scale(1.2); opacity: 1; }
+    }
+
+    .online-indicator-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        background-color: #94a3b8;
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    .online-indicator-dot.online {
+        background-color: var(--accent-mint);
+        box-shadow: 0 0 10px var(--accent-mint);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Chat Interface -->
+    <div class="col-lg-8 mb-4 mb-lg-0">
+        <div class="chat-container">
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="d-flex align-items-center">
+                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background-color: rgba(255,255,255,0.15) !important;">
+                        <i class="fa-solid fa-headset fs-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-white" id="chat-partner-title">
+                            {% if user.role == 'client' %}
+                                Conseiller COFINANCE
+                            {% else %}
+                                Client : {{ conversation.client.username }}
+                            {% endif %}
+                        </h6>
+                        <small class="d-flex align-items-center gap-2 mt-0.5" style="opacity: 0.95; font-size: 0.75rem;">
+                            <span class="online-indicator-dot" id="presence-dot"></span>
+                            <span id="presence-text" class="text-white">Statut inconnu</span>
+                        </small>
+                    </div>
+                </div>
+                <span class="badge bg-white bg-opacity-25 py-1.5 px-3 rounded-pill" style="font-size: 0.75rem; background-color: rgba(255,255,255,0.15) !important; color: white !important;">Room #{{ conversation.id }}</span>
+            </div>
+
+            <!-- Messages Box -->
+            <div class="chat-messages" id="chat-messages-box">
+                <!-- Messages will load dynamically via JS -->
+            </div>
+
+            <!-- Typing indicator -->
+            <div class="typing-indicator" id="typing-status" style="display: none;">
+                <!-- Filled via JS -->
+            </div>
+
+            <!-- Input Form -->
+            <div class="chat-input-area">
+                <form id="chat-form" class="d-flex gap-2">
+                    <input type="text" class="form-control bg-light border-0 py-2.5" id="chat-input" placeholder="Saisissez votre message ici..." autocomplete="off" required style="border-radius: 10px;">
+                    <button type="submit" class="btn btn-premium px-4" style="border-radius: 10px;">
+                        <i class="fa-regular fa-paper-plane text-white"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testing instructions side panel -->
+    <div class="col-lg-4">
+        <div class="card card-premium p-4 mb-4" style="border-left: 4px solid var(--primary-emerald);">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-info text-success me-2" style="color: var(--primary-emerald) !important;"></i>Démonstration du Temps Réel</h5>
+            <p class="text-muted small">
+                Le chat est propulsé par des WebSockets en temps réel avec Django Channels et Daphne.
+            </p>
+            <hr class="bg-light opacity-25">
+            <h6 class="fw-bold text-dark small mb-2">COMMENT TESTER LE CHAT :</h6>
+            <ol class="text-muted small ps-3">
+                <li class="mb-2">Ouvrez un <strong>nouvel onglet en navigation privée</strong> (ou un autre navigateur).</li>
+                <li class="mb-2">Connectez-vous sur un compte différent :
+                    <br>
+                    - Si vous êtes connecté ici comme <strong>{{ user.username }}</strong> ({{ user.get_role_display }}).
+                    <br>
+                    - Connectez-vous sur l'autre onglet comme <strong>{% if user.role == 'client' %}agent1{% else %}client1{% endif %}</strong> (Mot de passe: <strong>client123</strong>).
+                </li>
+                <li class="mb-2">Naviguez vers la page de <strong>Démo Chat</strong> sur les deux onglets.</li>
+                <li>Tapez un message et observez l'affichage instantané, l'indicateur <strong>"En ligne"</strong> et l'indicateur de frappe <strong>"En train d'écrire..."</strong> !</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const conversationId = "{{ conversation.id }}";
+    const currentUsername = "{{ user.username }}";
+    
+    const messagesBox = document.getElementById('chat-messages-box');
+    const chatInput = document.getElementById('chat-input');
+    const chatForm = document.getElementById('chat-form');
+    const typingStatus = document.getElementById('typing-status');
+    const presenceDot = document.getElementById('presence-dot');
+    const presenceText = document.getElementById('presence-text');
+    
+    let typingTimeout = null;
+    let isTypingSent = false;
+
+    // Load initial chat history via REST API
+    fetch(`/api/support/conversations/${conversationId}/messages/`)
+        .then(res => res.json())
+        .then(messages => {
+            messages.forEach(msg => {
+                appendMessage(msg);
+            });
+            scrollToBottom();
+        });
+
+    // Establish WebSocket Connection
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsPath = `${wsScheme}://${window.location.host}/ws/chat/${conversationId}/`;
+    const socket = new WebSocket(wsPath);
+
+    socket.onopen = function(e) {
+        console.log("WebSocket connecté avec succès !");
+        presenceDot.className = "online-indicator-dot online";
+        presenceText.innerText = "Connecté à la session";
+    };
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        
+        if (data.type === 'message') {
+            // Hide typing indicator when new message arrives
+            typingStatus.style.display = "none";
+            typingStatus.innerHTML = "";
+            appendMessage(data.message);
+            scrollToBottom();
+        } 
+        else if (data.type === 'typing') {
+            if (data.is_typing && data.user !== currentUsername) {
+                typingStatus.innerHTML = `
+                    <span>${data.user} est en train d'écrire</span>
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                `;
+                typingStatus.style.display = "flex";
+            } else {
+                typingStatus.style.display = "none";
+                typingStatus.innerHTML = "";
+            }
+        }
+        else if (data.type === 'presence') {
+            // Update recipient status (client or agent)
+            if (data.user !== currentUsername) {
+                if (data.status === 'online') {
+                    presenceDot.className = "online-indicator-dot online";
+                    presenceText.innerText = `En ligne (${data.user})`;
+                } else {
+                    presenceDot.className = "online-indicator-dot";
+                    presenceText.innerText = `Hors ligne`;
+                }
+            }
+        }
+    };
+
+    socket.onclose = function(e) {
+        console.warn("WebSocket fermé.", e);
+        presenceDot.className = "online-indicator-dot";
+        presenceText.innerText = "Déconnecté";
+    };
+
+    // Send Message
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const content = chatInput.value.trim();
+        if (!content) return;
+
+        // Send via WebSocket
+        socket.send(JSON.stringify({
+            action: 'message',
+            content: content
+        }));
+
+        chatInput.value = '';
+        
+        // Clear typing status
+        sendTypingStatus(false);
+    });
+
+    // Handle Typing Event
+    chatInput.addEventListener('keyup', function(e) {
+        if (!isTypingSent) {
+            sendTypingStatus(true);
+        }
+        
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            sendTypingStatus(false);
+        }, 1500);
+    });
+
+    function sendTypingStatus(isTyping) {
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                action: 'typing',
+                is_typing: isTyping
+            }));
+            isTypingSent = isTyping;
+        }
+    }
+
+    // Append Message helper
+    function appendMessage(msg) {
+        const isMe = msg.sender_name === currentUsername;
+        
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${isMe ? 'chat-bubble-me' : 'chat-bubble-other'}`;
+        
+        // Format date nicely
+        const date = new Date(msg.created_at);
+        const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        
+        bubble.innerHTML = `
+            <small class="fw-bold d-block text-opacity-75" style="font-size: 0.75rem; margin-bottom: 2px; color: ${isMe ? 'rgba(255,255,255,0.9)' : 'var(--primary-emerald)'}">
+                ${msg.sender_name} (${msg.sender_role})
+            </small>
+            <span>${msg.content}</span>
+            <span class="chat-time">${timeStr}</span>
+        `;
+        
+        messagesBox.appendChild(bubble);
+    }
+
+    function scrollToBottom() {
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+    }
+</script>
+{% endblock %}
